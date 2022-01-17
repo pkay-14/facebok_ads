@@ -100,7 +100,7 @@ module FacebookAds
     response    = nil
     retry_count = 0
 
-    loop do
+    begin
       response = yield
       break
     rescue *RETRYABLE_ERRORS => e
@@ -111,7 +111,7 @@ module FacebookAds
           nil
         end
 
-        code = error&.[]('code')
+        code = error && error['code'].present? ? error['code'] : nil
         raise e if code && !recoverable_codes.include?(code)
       end
 
