@@ -100,7 +100,7 @@ module FacebookAds
     response    = nil
     retry_count = 0
 
-    begin
+    loop do
       response = yield
       break
     rescue *RETRYABLE_ERRORS => e
