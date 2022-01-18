@@ -105,8 +105,8 @@ module FacebookAds
       query = {
         time_range: { since: range.first.to_s, until: range.last.to_s },
         level: level,
-        breakdowns: breakdowns&.join(','),
-        fields: fields&.join(','),
+        breakdowns: breakdowns.present? ? breakdowns.join(',') : nil,
+        fields: fields.present? ? fields.join(',') : nil,
         limit: limit
       }.reject { |_key, value| value.nil? || (value.respond_to?(:empty?) && value.empty?) }
 
