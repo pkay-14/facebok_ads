@@ -101,26 +101,28 @@ module FacebookAds
     retry_count = 0
 
     loop do
-      response = yield
-      break
-    rescue *RETRYABLE_ERRORS => e
-      if e.is_a?(RestClient::ExceptionWithResponse)
-        error = begin
-          JSON.parse(e.response)
-        rescue JSON::ParserError
-          nil
+      begin
+        response = yield
+        break
+      rescue *RETRYABLE_ERRORS => e
+        if e.is_a?(RestClient::ExceptionWithResponse)
+          error = begin
+            JSON.parse(e.response)
+          rescue JSON::ParserError
+            nil
+          end
+
+          code = error && error['code'].present? ? error['code'] : nil
+          raise e if code && !recoverable_codes.include?(code)
         end
 
-        code = error && error['code'].present? ? error['code'] : nil
-        raise e if code && !recoverable_codes.include?(code)
+        raise e if retry_count >= retry_limit
+
+        retry_count += 1
+        wait = (retry_count**2) + 15 + (rand(15) * (retry_count + 1))
+        puts "retry ##{retry_count} will start in #{wait}s" if debug
+        sleep wait
       end
-
-      raise e if retry_count >= retry_limit
-
-      retry_count += 1
-      wait = (retry_count**2) + 15 + (rand(15) * (retry_count + 1))
-      puts "retry ##{retry_count} will start in #{wait}s" if debug
-      sleep wait
     end
 
     response
